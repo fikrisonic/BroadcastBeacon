@@ -1,0 +1,3 @@
+rootProject.name = "LibraryBroadcastBeacon"
+include ':app'
+include ':broadcastbeacon'
