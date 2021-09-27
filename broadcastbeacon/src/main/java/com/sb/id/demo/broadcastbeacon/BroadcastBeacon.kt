@@ -3,6 +3,7 @@ package com.sb.id.demo.broadcastbeacon
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import org.altbeacon.beacon.Beacon
 import org.altbeacon.beacon.BeaconParser
@@ -16,8 +17,8 @@ class BroadcastBeacon {
     }
 
     companion object Builder {
-        private val iBeaconLayout = "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"
-        private val iBeaconManufacturer = 0x004C
+        val iBeaconLayout = "m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"
+        val iBeaconManufacturer = 0x004C
         private var beacon = Beacon.Builder().build()
         private var beaconParser = BeaconParser().setBeaconLayout(iBeaconLayout)
         private var beaconTransmitter: BeaconTransmitter? = null
@@ -26,6 +27,23 @@ class BroadcastBeacon {
         val ADVERTISE_1Hz_MODE_LOW_LATENCY = 0    //approx 1 Hz
         val ADVERTISE_3Hz_MODE_BALANCED = 1    //approx 3 Hz
         val ADVERTISE_10Hz_MODE_LOW_POWER = 2    //approx 10 Hz
+
+        //Broadcast Backgrund
+        var MAYOR_INTENT = "MAYOR_INTENT"
+        var MINOR_INTENT = "MINOR_INTENT"
+        var UUIDIBeacon_INTENT = "UUIDIBeacon_INTENT"
+        var REFRESHRATE_INTENT = "REFRESHRATE_INTENT"
+
+        const val ACTION_START_SERVICE = "ACTION_START_OR_RESUME_SERVICE"
+        const val ACTION_STOP_SERVICE = "ACTION_STOP_SERVICE"
+        const val ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE"
+        const val ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE"
+
+        private val TAG = "Broadcast_Beacon"
+
+        var mayorNow = "0"
+        var minorNow = "0"
+        var UuidIbeacon = "0"
 
         fun BroadcastBeacon(
             context: Context,
@@ -40,6 +58,10 @@ class BroadcastBeacon {
                 .setDataFields(listOf(0L))
                 .build()
             beaconTransmitter = BeaconTransmitter(context, beaconParser)
+
+            mayorNow = major
+            minorNow = minor
+            UuidIbeacon = UUID
         }
 
         fun startBroadcastBeacon() {
@@ -47,14 +69,14 @@ class BroadcastBeacon {
                 override fun onStartFailure(errorCode: Int) {
                     super.onStartFailure(errorCode)
                     callback?.onFailed()
-                    Log.i("Broadcast_Beacon", "Advertisement start failed.")
+                    Log.i(TAG, "Advertisement start failed.")
 
                 }
 
                 override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
                     super.onStartSuccess(settingsInEffect)
                     callback?.onSuccess()
-                    Log.i("Broadcast_Beacon", "Advertisement start succeeded.")
+                    Log.i(TAG, "Advertisement start succeeded.")
                 }
             })
         }
@@ -77,7 +99,7 @@ class BroadcastBeacon {
             beaconTransmitter!!.startAdvertising(beacon, object : AdvertiseCallback() {
                 override fun onStartFailure(errorCode: Int) {
                     super.onStartFailure(errorCode)
-                    Log.i("Broadcast_Beacon", "Advertisement start failed.")
+                    Log.i(TAG, "Advertisement start failed.")
                     callback?.onFailed()
 
                 }
@@ -86,7 +108,7 @@ class BroadcastBeacon {
                     super.onStartSuccess(settingsInEffect)
                     callback?.onSuccess()
 
-                    Log.i("Broadcast_Beacon", "Advertisement start succeeded.")
+                    Log.i(TAG, "Advertisement start succeeded.")
                 }
             })
         }
@@ -96,5 +118,22 @@ class BroadcastBeacon {
             beaconTransmitter!!.stopAdvertising()
             callback?.onStopBroadcast()
         }
+    }
+
+    fun startOnBackground(action: String, context: Context) {
+
+        context.startService(Intent(context, BackgroundServiceBeacon::class.java).apply {
+            this.action = action
+            this.putExtra(MAYOR_INTENT, mayorNow)
+            this.putExtra(MINOR_INTENT, minorNow)
+            // this.putExtra(REFRESHRATE_INTENT, refreshRate)
+            this.putExtra(UUIDIBeacon_INTENT, UuidIbeacon)
+        })
+    }
+
+    fun stopService(action: String, context: Context) {
+        context.startService(Intent(context, BackgroundServiceBeacon::class.java).apply {
+            this.action = action
+        })
     }
 }
