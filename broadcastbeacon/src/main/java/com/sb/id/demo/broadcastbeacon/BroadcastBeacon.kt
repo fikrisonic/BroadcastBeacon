@@ -118,22 +118,23 @@ class BroadcastBeacon {
             beaconTransmitter!!.stopAdvertising()
             callback?.onStopBroadcast()
         }
+
+        fun startOnBackground(action: String, context: Context) {
+            context.startService(Intent(context, BackgroundServiceBeacon::class.java).apply {
+                this.action = action
+                this.putExtra(MAYOR_INTENT, mayorNow)
+                this.putExtra(MINOR_INTENT, minorNow)
+                // this.putExtra(REFRESHRATE_INTENT, refreshRate)
+                this.putExtra(UUIDIBeacon_INTENT, UuidIbeacon)
+            })
+        }
+
+        fun stopService(action: String, context: Context) {
+            context.startService(Intent(context, BackgroundServiceBeacon::class.java).apply {
+                this.action = action
+            })
+        }
     }
 
-    fun startOnBackground(action: String, context: Context) {
 
-        context.startService(Intent(context, BackgroundServiceBeacon::class.java).apply {
-            this.action = action
-            this.putExtra(MAYOR_INTENT, mayorNow)
-            this.putExtra(MINOR_INTENT, minorNow)
-            // this.putExtra(REFRESHRATE_INTENT, refreshRate)
-            this.putExtra(UUIDIBeacon_INTENT, UuidIbeacon)
-        })
-    }
-
-    fun stopService(action: String, context: Context) {
-        context.startService(Intent(context, BackgroundServiceBeacon::class.java).apply {
-            this.action = action
-        })
-    }
 }
