@@ -10,7 +10,6 @@ import org.altbeacon.beacon.BeaconParser
 import org.altbeacon.beacon.BeaconTransmitter
 
 class BroadcastBeacon {
-
     interface Callback {
         fun onSuccess()
         fun onFailed()
@@ -24,7 +23,6 @@ class BroadcastBeacon {
         private var beaconParser = BeaconParser().setBeaconLayout(iBeaconLayout)
         private var beaconTransmitter: BeaconTransmitter? = null
         private var callback: Callback? = null
-        lateinit var helper: NetworkHelper.API
 
         var TAG = "Broadcast_Beacon"
 
@@ -32,6 +30,8 @@ class BroadcastBeacon {
         var MINOR_INTENT = "MINOR_INTENT"
         var UUIDIBeacon_INTENT = "UUIDIBeacon_INTENT"
         var REFRESHRATE_INTENT = "REFRESHRATE_INTENT"
+        const val ACTION_START_SERVICE = "ACTION_START_OR_RESUME_SERVICE"
+        const val ACTION_STOP_SERVICE = "ACTION_STOP_SERVICE"
         const val ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE"
         const val ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE"
 
@@ -50,6 +50,7 @@ class BroadcastBeacon {
             callback: Callback
         ) {
             this.callback = callback
+
             beacon = Beacon.Builder().setId1(UUID).setId2(major).setId3(minor)
                 .setManufacturer(iBeaconManufacturer).setTxPower(-59)
                 .setDataFields(listOf(0L))
@@ -59,7 +60,6 @@ class BroadcastBeacon {
             mayorNow = major
             minorNow = minor
             UuidIbeacon = UUID
-
         }
 
         fun startBroadcastBeacon() {
@@ -67,14 +67,14 @@ class BroadcastBeacon {
                 override fun onStartFailure(errorCode: Int) {
                     super.onStartFailure(errorCode)
                     callback?.onFailed()
-                    Log.i("Broadcast_Beacon", "Advertisement start failed.")
+                    Log.i(TAG, "Advertisement start failed.")
 
                 }
 
                 override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
                     super.onStartSuccess(settingsInEffect)
                     callback?.onSuccess()
-                    Log.i("Broadcast_Beacon", "Advertisement start succeeded.")
+                    Log.i(TAG, "Advertisement start succeeded.")
                 }
             })
         }
@@ -97,7 +97,7 @@ class BroadcastBeacon {
             beaconTransmitter!!.startAdvertising(beacon, object : AdvertiseCallback() {
                 override fun onStartFailure(errorCode: Int) {
                     super.onStartFailure(errorCode)
-                    Log.i("Broadcast_Beacon", "Advertisement start failed.")
+                    Log.i(TAG, "Advertisement start failed.")
                     callback?.onFailed()
 
                 }
@@ -106,19 +106,21 @@ class BroadcastBeacon {
                     super.onStartSuccess(settingsInEffect)
                     callback?.onSuccess()
 
-                    Log.i("Broadcast_Beacon", "Advertisement start succeeded.")
+                    Log.i(TAG, "Advertisement start succeeded.")
                 }
             })
         }
 
 
         fun stopBroadcastBeacon() {
-            beaconTransmitter!!.stopAdvertising()
-            callback?.onStopBroadcast()
+            if (beaconTransmitter != null) {
+                beaconTransmitter!!.stopAdvertising()
+                callback?.onStopBroadcast()
+            }
         }
 
         fun startOnBackground(action: String, context: Context) {
-            context.startService(Intent(context, NewBackgroundService::class.java).apply {
+            context.startService(Intent(context, BackgroundServiceBeacon::class.java).apply {
                 this.action = action
                 this.putExtra(MAYOR_INTENT, mayorNow)
                 this.putExtra(MINOR_INTENT, minorNow)
@@ -128,7 +130,7 @@ class BroadcastBeacon {
         }
 
         fun stopService(action: String, context: Context) {
-            context.startService(Intent(context, NewBackgroundService::class.java).apply {
+            context.startService(Intent(context, BackgroundServiceBeacon::class.java).apply {
                 this.action = action
             })
         }
