@@ -32,6 +32,7 @@ class BackgroundServiceBeacon : Service() {
         var notificationTitle = "Broadcast Beacon Active"
         var notificationText = "Looking for beacon scanner..."
     }
+    private var beaconTransmitter: BeaconTransmitter? = null
 
     override fun onBind(p0: Intent?): IBinder? {
         TODO("Not yet implemented")
@@ -81,8 +82,10 @@ class BackgroundServiceBeacon : Service() {
     private fun startBroadcastBeacon(intent: Intent) {
         val beaconParser =
             BeaconParser().setBeaconLayout(iBeaconLayout)
-        val beaconTransmitter = BeaconTransmitter(this, beaconParser)
-
+        if (beaconTransmitter!=null){
+            beaconTransmitter!!.stopAdvertising()
+        }
+        beaconTransmitter = BeaconTransmitter(this, beaconParser)
         val mayor = intent.getStringExtra(MAYOR_INTENT)
         val minor = intent.getStringExtra(MINOR_INTENT)
         val UUIdIBeacon = intent.getStringExtra(UUIDIBeacon_INTENT)
@@ -97,13 +100,13 @@ class BackgroundServiceBeacon : Service() {
 
         Log.v(
             "Broadcast_Beacon",
-            "After change hz : " + beaconTransmitter.advertiseMode.toString()
+            "After change hz : " + beaconTransmitter!!.advertiseMode.toString()
         )
 
         //       ADVERTISE_MODE_LOW_LATENCY	approx 1 Hz
         //       ADVERTISE_MODE_BALANCED	approx 3 Hz
         //       ADVERTISE_MODE_LOW_POWER	approx 10 Hz
-        beaconTransmitter.startAdvertising(beacon, object : AdvertiseCallback() {
+        beaconTransmitter!!.startAdvertising(beacon, object : AdvertiseCallback() {
             override fun onStartFailure(errorCode: Int) {
                 super.onStartFailure(errorCode)
                 Toast.makeText(

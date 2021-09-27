@@ -65,6 +65,9 @@ class BroadcastBeacon {
         }
 
         fun startBroadcastBeacon() {
+            if (beaconTransmitter != null) {
+                beaconTransmitter!!.stopAdvertising()
+            }
             beaconTransmitter!!.startAdvertising(beacon, object : AdvertiseCallback() {
                 override fun onStartFailure(errorCode: Int) {
                     super.onStartFailure(errorCode)
@@ -95,22 +98,7 @@ class BroadcastBeacon {
                     beaconTransmitter!!.advertiseMode = AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY
                 }
             }
-
-            beaconTransmitter!!.startAdvertising(beacon, object : AdvertiseCallback() {
-                override fun onStartFailure(errorCode: Int) {
-                    super.onStartFailure(errorCode)
-                    Log.i(TAG, "Advertisement start failed.")
-                    callback?.onFailed()
-
-                }
-
-                override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
-                    super.onStartSuccess(settingsInEffect)
-                    callback?.onSuccess()
-
-                    Log.i(TAG, "Advertisement start succeeded.")
-                }
-            })
+            startBroadcastBeacon()
         }
 
 
@@ -135,6 +123,4 @@ class BroadcastBeacon {
             })
         }
     }
-
-
 }
