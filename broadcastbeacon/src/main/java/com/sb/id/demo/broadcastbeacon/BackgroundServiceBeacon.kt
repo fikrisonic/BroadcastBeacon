@@ -24,22 +24,26 @@ import org.altbeacon.beacon.BeaconParser
 import org.altbeacon.beacon.BeaconTransmitter
 
 class BackgroundServiceBeacon : Service() {
-
     companion object {
-        private const val NOTIFICATION_ID = 123
-        private const val CHANNEL_ID = "BroadcastBeacon"
+        private val NOTIFICATION_ID = 123
+        private val CHANNEL_ID = "BroadcastBeacon"
         private lateinit var notification: Notification
         var notificationTitle = "Broadcast Beacon Active"
         var notificationText = "Looking for beacon scanner..."
+        private var beaconTransmitter: BeaconTransmitter? = null
     }
-    private var beaconTransmitter: BeaconTransmitter? = null
 
     override fun onBind(p0: Intent?): IBinder? {
         TODO("Not yet implemented")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
+        val beaconParser =
+            BeaconParser().setBeaconLayout(iBeaconLayout)
+        if (beaconTransmitter != null) {
+            beaconTransmitter!!.stopAdvertising()
+        }
+        beaconTransmitter = BeaconTransmitter(this, beaconParser)
         intent?.let {
             when (it.action) {
                 ACTION_START_SERVICE -> {
@@ -47,13 +51,10 @@ class BackgroundServiceBeacon : Service() {
                     startBroadcastBeacon(intent)
                 }
                 ACTION_STOP_SERVICE -> {
-                    val beaconParser =
-                        BeaconParser().setBeaconLayout(iBeaconLayout)
-                    val beaconTransmitter = BeaconTransmitter(this, beaconParser)
-                    beaconTransmitter.stopAdvertising()
+                    beaconTransmitter!!.stopAdvertising()
                     stopSelf()
                     Toast.makeText(
-                        this,
+                        this@BackgroundServiceBeacon,
                         "Beacon Tidak Aktif",
                         Toast.LENGTH_LONG
                     )
@@ -80,12 +81,8 @@ class BackgroundServiceBeacon : Service() {
     }
 
     private fun startBroadcastBeacon(intent: Intent) {
-        val beaconParser =
-            BeaconParser().setBeaconLayout(iBeaconLayout)
-        if (beaconTransmitter!=null){
-            beaconTransmitter!!.stopAdvertising()
-        }
-        beaconTransmitter = BeaconTransmitter(this, beaconParser)
+
+
         val mayor = intent.getStringExtra(MAYOR_INTENT)
         val minor = intent.getStringExtra(MINOR_INTENT)
         val UUIdIBeacon = intent.getStringExtra(UUIDIBeacon_INTENT)
@@ -98,6 +95,10 @@ class BackgroundServiceBeacon : Service() {
             .setDataFields(listOf(0L))
             .build()
 
+//                    if (REFRESHRATE!="REFRESHRATE") {
+//                        beaconTransmitter.advertiseMode =
+//                            intent.getIntExtra(REFRESHRATE, 0)
+//                    }
         Log.v(
             "Broadcast_Beacon",
             "After change hz : " + beaconTransmitter!!.advertiseMode.toString()
@@ -166,9 +167,10 @@ class BackgroundServiceBeacon : Service() {
         //Get The pending intent containing the entire back stack
         val broadcastIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
 
+        //disable viration
         //disable vibration
         val intent = Intent(context, BackgroundServiceBeacon::class.java)
-        intent.action = ACTION_STOP_FOREGROUND_SERVICE
+        intent.setAction(ACTION_STOP_FOREGROUND_SERVICE)
         val stopPendingIntent =
             PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
