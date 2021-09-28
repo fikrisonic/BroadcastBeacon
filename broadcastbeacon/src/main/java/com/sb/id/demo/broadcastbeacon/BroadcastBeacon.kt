@@ -1,5 +1,6 @@
 package com.sb.id.demo.broadcastbeacon
 
+import android.app.Activity
 import android.bluetooth.le.AdvertiseCallback
 import android.bluetooth.le.AdvertiseSettings
 import android.content.Context
@@ -134,6 +135,16 @@ class BroadcastBeacon {
                 this.action = action
             })
         }
-    }
 
+        fun initStopServiceBackground(activity: Activity) {
+            if (activity.intent.extras != null) {
+                val intent = activity.intent.getStringExtra(ACTION_STOP_FOREGROUND_SERVICE)
+                if (intent == ACTION_STOP_FOREGROUND_SERVICE) {
+                    stopBroadcastBeacon()
+                    stopService(ACTION_STOP_FOREGROUND_SERVICE, activity)
+                }
+            }
+        }
+
+    }
 }
