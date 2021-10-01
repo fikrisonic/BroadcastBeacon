@@ -56,6 +56,10 @@ class BackgroundServiceBeacon : Service() {
                         stopForeground(STOP_FOREGROUND_REMOVE)
                     } else stopForeground(true)
                     stopSelf()
+                    Log.i(TAG, "Beacon is not active")
+                }
+                else -> {
+                    Log.i(TAG, "Invalid action service")
                 }
             }
         }

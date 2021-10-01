@@ -104,6 +104,7 @@ class BroadcastBeacon {
             if (beaconTransmitter != null) {
                 beaconTransmitter!!.stopAdvertising()
                 callback?.onStopBroadcast()
+                Log.i(TAG, "Beacon is not active")
             }
         }
 
@@ -131,6 +132,7 @@ class BroadcastBeacon {
             context.startService(Intent(context, BackgroundServiceBeacon::class.java).apply {
                 this.action = ACTION_STOP_FOREGROUND_SERVICE
             })
+
         }
 
         fun initStopServiceBackground(activity: Activity) {
