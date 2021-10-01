@@ -87,6 +87,12 @@ class BackgroundServiceBeacon : Service() {
             2 -> {
                 beaconTransmitter!!.advertiseMode = AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY
             }
+            else -> {
+                Log.v(
+                    TAG,
+                    "Refresh rate is not valid"
+                )
+            }
         }
 
         Log.v(

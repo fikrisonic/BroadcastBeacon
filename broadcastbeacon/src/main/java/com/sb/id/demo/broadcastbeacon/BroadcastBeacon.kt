@@ -34,6 +34,7 @@ class BroadcastBeacon {
         const val ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE"
         const val ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE"
 
+        //Default Broadcast 3hz
         val BROADCAST_1Hz_MODE_LOW_LATENCY = 0    //approx 1 Hz
         val BROADCAST_3Hz_MODE_BALANCED = 1    //approx 3 Hz
         val BROADCAST_10Hz_MODE_LOW_POWER = 2    //approx 10 Hz
@@ -41,6 +42,7 @@ class BroadcastBeacon {
         var mayorNow = "0"
         var minorNow = "0"
         var UuidIbeacon = "0"
+
         fun BroadcastBeacon(
             context: Context,
             UUID: String,
@@ -62,6 +64,8 @@ class BroadcastBeacon {
         }
 
         fun startBroadcastBeacon() {
+            stopBroadcastBeacon()
+
             beaconTransmitter!!.startAdvertising(beacon, object : AdvertiseCallback() {
                 override fun onStartFailure(errorCode: Int) {
                     super.onStartFailure(errorCode)
@@ -92,22 +96,7 @@ class BroadcastBeacon {
                     beaconTransmitter!!.advertiseMode = AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY
                 }
             }
-
-            beaconTransmitter!!.startAdvertising(beacon, object : AdvertiseCallback() {
-                override fun onStartFailure(errorCode: Int) {
-                    super.onStartFailure(errorCode)
-                    Log.i(TAG, "Advertisement start failed.")
-                    callback?.onFailed()
-
-                }
-
-                override fun onStartSuccess(settingsInEffect: AdvertiseSettings?) {
-                    super.onStartSuccess(settingsInEffect)
-                    callback?.onSuccess()
-
-                    Log.i(TAG, "Advertisement start succeeded.")
-                }
-            })
+            startBroadcastBeacon()
         }
 
 
@@ -138,7 +127,7 @@ class BroadcastBeacon {
             })
         }
 
-        fun stopService(context: Context) {
+        fun stopBeaconForeground(context: Context) {
             context.startService(Intent(context, BackgroundServiceBeacon::class.java).apply {
                 this.action = ACTION_STOP_FOREGROUND_SERVICE
             })
@@ -149,7 +138,7 @@ class BroadcastBeacon {
                 val intent = activity.intent.getStringExtra(ACTION_STOP_FOREGROUND_SERVICE)
                 if (intent == ACTION_STOP_FOREGROUND_SERVICE) {
                     stopBroadcastBeacon()
-                    stopService(activity)
+                    stopBeaconForeground(activity)
                 }
             }
         }
