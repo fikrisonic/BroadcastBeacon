@@ -31,14 +31,12 @@ class BroadcastBeacon {
         var MINOR_INTENT = "MINOR_INTENT"
         var UUIDIBeacon_INTENT = "UUIDIBeacon_INTENT"
         var REFRESHRATE_INTENT = "REFRESHRATE_INTENT"
-        const val ACTION_START_SERVICE = "ACTION_START_OR_RESUME_SERVICE"
-        const val ACTION_STOP_SERVICE = "ACTION_STOP_SERVICE"
         const val ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE"
         const val ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE"
 
-        val ADVERTISE_1Hz_MODE_LOW_LATENCY = 0    //approx 1 Hz
-        val ADVERTISE_3Hz_MODE_BALANCED = 1    //approx 3 Hz
-        val ADVERTISE_10Hz_MODE_LOW_POWER = 2    //approx 10 Hz
+        val BROADCAST_1Hz_MODE_LOW_LATENCY = 0    //approx 1 Hz
+        val BROADCAST_3Hz_MODE_BALANCED = 1    //approx 3 Hz
+        val BROADCAST_10Hz_MODE_LOW_POWER = 2    //approx 10 Hz
 
         var mayorNow = "0"
         var minorNow = "0"
@@ -120,19 +118,29 @@ class BroadcastBeacon {
             }
         }
 
-        fun startOnBackground(action: String, context: Context) {
+        fun startBeaconForeground(context: Context) {
             context.startService(Intent(context, BackgroundServiceBeacon::class.java).apply {
-                this.action = action
+                this.action = ACTION_START_FOREGROUND_SERVICE
                 this.putExtra(MAYOR_INTENT, mayorNow)
                 this.putExtra(MINOR_INTENT, minorNow)
-                // this.putExtra(REFRESHRATE_INTENT, refreshRate)
+                this.putExtra(REFRESHRATE_INTENT, BROADCAST_3Hz_MODE_BALANCED)
                 this.putExtra(UUIDIBeacon_INTENT, UuidIbeacon)
             })
         }
 
-        fun stopService(action: String, context: Context) {
+        fun startBeaconForeground(context: Context, refreshRate: Int) {
             context.startService(Intent(context, BackgroundServiceBeacon::class.java).apply {
-                this.action = action
+                this.action = ACTION_START_FOREGROUND_SERVICE
+                this.putExtra(MAYOR_INTENT, mayorNow)
+                this.putExtra(MINOR_INTENT, minorNow)
+                this.putExtra(REFRESHRATE_INTENT, refreshRate)
+                this.putExtra(UUIDIBeacon_INTENT, UuidIbeacon)
+            })
+        }
+
+        fun stopService(context: Context) {
+            context.startService(Intent(context, BackgroundServiceBeacon::class.java).apply {
+                this.action = ACTION_STOP_FOREGROUND_SERVICE
             })
         }
 
@@ -141,7 +149,7 @@ class BroadcastBeacon {
                 val intent = activity.intent.getStringExtra(ACTION_STOP_FOREGROUND_SERVICE)
                 if (intent == ACTION_STOP_FOREGROUND_SERVICE) {
                     stopBroadcastBeacon()
-                    stopService(ACTION_STOP_FOREGROUND_SERVICE, activity)
+                    stopService(activity)
                 }
             }
         }

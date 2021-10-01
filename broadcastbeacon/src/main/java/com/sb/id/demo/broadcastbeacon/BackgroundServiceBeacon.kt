@@ -12,11 +12,11 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import com.sb.id.demo.broadcastbeacon.BroadcastBeacon.Builder.ACTION_START_FOREGROUND_SERVICE
-import com.sb.id.demo.broadcastbeacon.BroadcastBeacon.Builder.ACTION_START_SERVICE
 import com.sb.id.demo.broadcastbeacon.BroadcastBeacon.Builder.ACTION_STOP_FOREGROUND_SERVICE
-import com.sb.id.demo.broadcastbeacon.BroadcastBeacon.Builder.ACTION_STOP_SERVICE
+import com.sb.id.demo.broadcastbeacon.BroadcastBeacon.Builder.BROADCAST_3Hz_MODE_BALANCED
 import com.sb.id.demo.broadcastbeacon.BroadcastBeacon.Builder.MAYOR_INTENT
 import com.sb.id.demo.broadcastbeacon.BroadcastBeacon.Builder.MINOR_INTENT
+import com.sb.id.demo.broadcastbeacon.BroadcastBeacon.Builder.TAG
 import com.sb.id.demo.broadcastbeacon.BroadcastBeacon.Builder.UUIDIBeacon_INTENT
 import com.sb.id.demo.broadcastbeacon.BroadcastBeacon.Builder.iBeaconLayout
 import org.altbeacon.beacon.Beacon
@@ -66,6 +66,8 @@ class BackgroundServiceBeacon : Service() {
         val mayor = intent.getStringExtra(MAYOR_INTENT)
         val minor = intent.getStringExtra(MINOR_INTENT)
         val UUIdIBeacon = intent.getStringExtra(UUIDIBeacon_INTENT)
+        val refreshRate =
+            intent.getIntExtra(BroadcastBeacon.REFRESHRATE_INTENT, BROADCAST_3Hz_MODE_BALANCED)
 
         val beacon = Beacon.Builder().setId1(UUIdIBeacon)
             .setId2(mayor) //major
@@ -75,14 +77,23 @@ class BackgroundServiceBeacon : Service() {
             .setDataFields(listOf(0L))
             .build()
 
+        when (refreshRate) {
+            0 -> {
+                beaconTransmitter!!.advertiseMode = AdvertiseSettings.ADVERTISE_MODE_LOW_POWER
+            }
+            1 -> {
+                beaconTransmitter!!.advertiseMode = AdvertiseSettings.ADVERTISE_MODE_BALANCED
+            }
+            2 -> {
+                beaconTransmitter!!.advertiseMode = AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY
+            }
+        }
+
         Log.v(
-            "Broadcast_Beacon",
+            TAG,
             "After change hz : " + beaconTransmitter!!.advertiseMode.toString()
         )
 
-        //       ADVERTISE_MODE_LOW_LATENCY	approx 1 Hz
-        //       ADVERTISE_MODE_BALANCED	approx 3 Hz
-        //       ADVERTISE_MODE_LOW_POWER	approx 10 Hz
         beaconTransmitter!!.startAdvertising(beacon, object : AdvertiseCallback() {
             override fun onStartFailure(errorCode: Int) {
                 super.onStartFailure(errorCode)
@@ -93,7 +104,7 @@ class BackgroundServiceBeacon : Service() {
                 )
                     .show()
                 Log.e(
-                    "Broadcast_Beacon",
+                    TAG,
                     "Advertisement start failed with code: $errorCode"
                 )
             }
@@ -106,7 +117,7 @@ class BackgroundServiceBeacon : Service() {
                     Toast.LENGTH_LONG
                 )
                     .show()
-                Log.i("Broadcast_Beacon", "Advertisement start succeeded.")
+                Log.i(TAG, "Advertisement start succeeded.")
             }
         })
     }
